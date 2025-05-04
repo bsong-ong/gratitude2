@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { Plus, Heart, Calendar, Globe } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Heart, Calendar, Globe, Image } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import enTranslations from './translations/en.json';
 import thTranslations from './translations/th.json';
@@ -9,33 +9,47 @@ interface GratitudeEntry {
   title: string;
   description: string;
   date: string;
+  image?: string;
+  drawing?: string;
 }
 
 const AppContent: React.FC = () => {
   const { language, toggleLanguage } = useLanguage();
   const translations = language === 'en' ? enTranslations : thTranslations;
   
-  const [entries, setEntries] = useState<GratitudeEntry[]>([
-    {
-      id: 1,
-      title: language === 'en' ? "Morning Sunshine" : "แสงแดดยามเช้า",
-      description: language === 'en' 
-        ? "The way the sunlight filtered through the trees this morning was pure magic." 
-        : "วิธีที่แสงแดดส่องผ่านต้นไม้ในตอนเช้านี้เป็นสิ่งมหัศจรรย์ที่แท้จริง",
-      date: "2023-11-15"
-    },
-    {
-      id: 2,
-      title: language === 'en' ? "Unexpected Kindness" : "น้ำใจที่ไม่คาดคิด",
-      description: language === 'en'
-        ? "The barista remembered my usual order without asking. Small but meaningful connection."
-        : "บาริสต้าจำออเดอร์ปกติของฉันได้โดยไม่ต้องถาม น้ำใจเล็กๆ ที่มีความหมายมาก",
-      date: "2023-11-14"
-    }
-  ]);
-  
-  const [newEntry, setNewEntry] = useState({ title: '', description: '' });
+  const [entries, setEntries] = useState<GratitudeEntry[]>([]);
+  const [newEntry, setNewEntry] = useState({ title: '', description: '', image: '', drawing: '' });
   const [isAdding, setIsAdding] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewEntry({ ...newEntry, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMouseDown = () => setIsDrawing(true);
+  const handleMouseUp = () => setIsDrawing(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDrawing || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +57,11 @@ const AppContent: React.FC = () => {
       const entry = {
         ...newEntry,
         id: Date.now(),
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        drawing: canvasRef.current?.toDataURL() || ''
       };
       setEntries([entry, ...entries]);
-      setNewEntry({ title: '', description: '' });
+      setNewEntry({ title: '', description: '', image: '', drawing: '' });
       setIsAdding(false);
     }
   };
@@ -106,6 +121,35 @@ const AppContent: React.FC = () => {
                 placeholder={translations.descriptionPlaceholder}
               />
             </div>
+            <div className="mb-4">
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                {translations.imageLabel}
+              </label>
+              <input
+                type="file"
+                id="image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {newEntry.image && (
+                <img src={newEntry.image} alt="Preview" className="mt-4 w-full h-64 object-cover rounded-md" />
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {translations.drawingLabel}
+              </label>
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={200}
+                className="border border-gray-300 rounded-md"
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+              />
+            </div>
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -130,6 +174,12 @@ const AppContent: React.FC = () => {
               key={entry.id}
               className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow"
             >
+              {entry.image && (
+                <img src={entry.image} alt={entry.title} className="w-full h-64 object-cover rounded-md mb-4" />
+              )}
+              {entry.drawing && (
+                <img src={entry.drawing} alt="Drawing" className="w-full h-64 object-cover rounded-md mb-4" />
+              )}
               <div className="flex justify-between items-start">
                 <h2 className="text-xl font-semibold text-indigo-700">{entry.title}</h2>
                 <div className="flex items-center text-gray-500">

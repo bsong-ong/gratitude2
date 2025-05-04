@@ -9,5 +9,7 @@
   "noEntries": "No gratitude entries yet",
   "addFirstEntry": "Add Your First Entry",
   "titleLabel": "What are you grateful for?",
-  "descriptionLabel": "Why does it matter to you?"
+  "descriptionLabel": "Why does it matter to you?",
+  "imageLabel": "Upload a photo",
+  "drawingLabel": "Draw your gratitude"
 }
