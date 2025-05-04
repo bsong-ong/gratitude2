@@ -1,0 +1,13 @@
+{
+  "appTitle": "Gratitude Journal",
+  "appSubtitle": "Capture the moments that bring joy to your day",
+  "addEntry": "Add Entry",
+  "saveEntry": "Save Entry",
+  "cancel": "Cancel",
+  "titlePlaceholder": "e.g., My morning coffee ritual",
+  "descriptionPlaceholder": "e.g., It helps me start my day with intention and calm",
+  "noEntries": "No gratitude entries yet",
+  "addFirstEntry": "Add Your First Entry",
+  "titleLabel": "What are you grateful for?",
+  "descriptionLabel": "Why does it matter to you?"
+}
